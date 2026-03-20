@@ -1,0 +1,22 @@
+
+local WeaponClass = require(game.ServerScriptService.WeaponClass)
+
+local DarkHeartServerSide = WeaponClass.NewWeapon('Goop')
+
+local QAbility = DarkHeartServerSide:CreateAbility({
+	
+	Input = Enum.KeyCode.Q ;
+	
+	Damage = 10 ;
+	
+})
+
+
+local Mouse1 = DarkHeartServerSide:CreateAbility({
+
+	Input = Enum.UserInputType.MouseButton1 ;
+
+})
+
+
+return DarkHeartServerSide

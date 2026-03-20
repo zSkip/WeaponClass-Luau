@@ -1,0 +1,116 @@
+
+local WeaponClass = {} ; -- driving power mad with this I forsee it
+local WeaponClassMeta = {__index=WeaponClass} ;
+
+local BindClass = {} ;
+local BindClassMeta = {__index=BindClass} ;
+
+local WeaponMaker = {
+
+CreatedWeapons = {} ;
+	
+} ;
+
+local RunServ = game:GetService('RunService') ;
+
+type DamageType = {
+	
+	DamageNumber : number ; 
+	
+	DamageType : "Physical" | "Magical" | "True"
+	
+}
+
+type KeybindClassData = {
+	
+	Input : Enum.KeyCode | Enum.UserInputType ;
+	
+	Damage : number | DamageType ;
+	
+	HitboxRange : number ;
+	
+	Animation : number ;
+	
+	AttackSpeed : number ;
+	
+}
+
+function WeaponMaker.NewWeapon(Name)
+
+	local self = setmetatable({
+		
+		Identifier = Name ;
+		
+		KeyBinds = {} ;
+		
+		MouseBinds = {} ;
+	
+	},WeaponClassMeta) ;
+	
+	WeaponMaker.CreatedWeapons[Name] = self ;
+	
+	return self ;
+	
+end ;
+
+function WeaponClass:CreateAbility(KeybindClassData:KeybindClassData)
+	
+	if KeybindClassData.Input.EnumType == Enum.KeyCode then
+		
+		self.KeyBinds[KeybindClassData.Input.Name] = setmetatable({ 
+
+			Input = KeybindClassData.Input ;
+
+			Damage = KeybindClassData.Damage ;
+
+			HitboxRange = KeybindClassData.HitboxRange ;
+
+			Animation = KeybindClassData.Animation ;
+			AnimationFrames = 0 ;
+
+			AttackSpeed = KeybindClassData.AttackSpeed ;
+	
+			CoolDown = os.time() ;
+
+			Identifier = self.Identifier 
+
+		},BindClassMeta) ;
+		
+		return self.KeyBinds[KeybindClassData.Input.Name]
+
+	elseif KeybindClassData.Input.EnumType == Enum.UserInputType then
+		
+		self.MouseBinds[KeybindClassData.Input.Name] = setmetatable({ 
+
+			Input = KeybindClassData.Input ;
+
+			Damage = KeybindClassData.Damage ;
+
+			HitboxRange = KeybindClassData.HitboxRange ;
+
+			Animation = KeybindClassData.Animation ;
+			AnimationFrames = 0 ;
+
+			AttackSpeed = KeybindClassData.AttackSpeed ;
+			
+			CoolDown = os.time() ;
+
+			Identifier = self.Identifier 
+
+		},BindClassMeta) ;
+		
+		print(self,self.KeyBinds,self.KeyBinds[KeybindClassData.Input.Name])
+		
+		return self.MouseBinds[KeybindClassData.Input.Name]
+		
+	end ;
+	
+end ;
+
+function BindClass:BindFunction()
+	
+
+	
+end ;
+
+return WeaponMaker ;

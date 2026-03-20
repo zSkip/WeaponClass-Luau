@@ -1,0 +1,185 @@
+----- Ability -----
+
+local Data = require(game.ServerScriptService.Data.DataManager)
+local RepStorage = game:GetService("ReplicatedStorage")
+local DarkHeart = {}
+DarkHeart.MouseOneData = {
+	Damage = 10 ;
+	AttackSpeed = 2 ;
+    Frames = 15 ;
+    AttackAnim = 'SwingBackup' ;
+    CheckRange = 5 ;-- studs
+}
+
+function DarkHeart.MouseOne(PassThrough)
+	
+	local Player = PassThrough['Player']
+	
+	local Replica = Data:ReturnTempReplica(Player)
+	local HereData = Data:ReturnTempData(Player)
+
+	if HereData.CanHit <= workspace:GetServerTimeNow()  and Player.Character.Humanoid.Health > 0 then
+		
+		Replica:Set({'CanHit'},workspace:GetServerTimeNow() + ((HereData.Frames/HereData.AttackSpeed)/60) + .25)
+		
+		Replica:Set({'Attacking'},true)
+		
+		task.spawn(function()
+			
+			task.wait(workspace:GetServerTimeNow() + ((HereData.Frames/HereData.AttackSpeed)/60))
+
+			
+			Replica:Set({'Attacking'},false)
+			
+			
+		end)
+		
+	end
+	
+end
+
+function DarkHeart.QAbility(PassThrough) -- SpeedCoil Ability
+
+	local Player = PassThrough['Player']
+	
+	local Replica = Data:ReturnTempReplica(Player)
+	local HereData = Data:ReturnTempData(Player)
+	
+	if HereData.CanQ <= workspace:GetServerTimeNow() and Player.Character.Humanoid.Health > 0 then
+
+		local EffectData = Data:ReturnEffectReplica(Player)
+		local HitboxData = Data:ReturnHitboxtReplica(Player)
+		
+		local MousePos = PassThrough['Mouse']
+		local Hash = math.random(1,99999999)
+		local Hash2 = math.random(1,9)
+
+		Replica:Set({'CanQ'},workspace:GetServerTimeNow() + 15) -- CoolDown
+
+		Replica:Set({'UsingQ'}, true) -- State of attack
+
+		EffectData:Set({''},{
+
+			EffectName = 'DarkHearQ' ;
+			PassThrough = {Target = MousePos} ;
+
+		})
+		
+		HitboxData:TableInsert({'Data'},{
+			
+			Name = 'DarkHeartQAbility' ;
+			
+			Id = tonumber(`{Player.UserId-Hash}{Hash2}`) ; 
+			
+			Caster = Player ;
+			
+			Position = MousePos.Position + Vector3.new(0,2.5,0) ;
+			
+			Size = Vector3.new(5,5,5);
+			
+			Params = nil ;
+			
+			HitboxVisual = true ;
+			
+			ExcludeCaster = false ;
+			
+			Repeat = 15 ; 
+			
+		},tonumber(`{Player.UserId-Hash}{Hash2}`))
+		print(HitboxData)
+		
+		task.spawn(function()
+
+			task.wait(15)
+
+			Replica:Set({'UsingQ'},false)
+
+		end)
+
+	end
+end
+
+function DarkHeart.EAbility(PassThrough) -- SlingShot Ability
+	
+	
+	
+end
+
+function DarkHeart.RAbility(PassThrough) -- Heal Bloxy Cola, 3 healing burst for 10 hp each burst
+	
+	local Player = PassThrough['Player']
+	
+	local Replica = Data:ReturnTempReplica(Player)
+	local HereData = Data:ReturnTempData(Player)
+
+	if HereData.CanR <= workspace:GetServerTimeNow() and Player.Character.Humanoid.Health > 0 then
+
+		local EffectData = Data:ReturnEffectReplica(Player)
+
+		local Tool = Player.Character:FindFirstChild(HereData.SelectedClass)
+
+		Replica:Set({'CanR'},workspace:GetServerTimeNow() + 15) -- CoolDown
+
+		Replica:Set({'UsingR'}, true) -- State of attack
+		
+		EffectData:Set({''},{
+
+			EffectName = 'DarkHearR' ;
+			PassThrough = {Target = Tool.Handle} ;
+			
+		})
+
+		Replica:Set({'Damage'},HereData.Damage + 20)
+
+		task.spawn(function()
+
+			task.wait(15)
+
+			Replica:Set({'UsingR'},false)
+			Replica:Set({'Damage'},HereData.Damage - 20)
+
+		end)
+
+
+	end
+	
+end
+
+function DarkHeart.OnHit(Player,TargetPlayer)
+
+	local TempData = Data:ReturnTempData(Player)
+
+	if TempData.UsingR == true then
+	
+		local EffectRep = Data:ReturnEffectReplica(Player)
+		
+		--[[EffectRep:Set({''},{
+
+			EffectName = 'DarkHearR' ;
+			Target = {Player = TargetPlayer.UserId,['Head'] = true,['Torso'] = true,['Left Leg'] = true, ['Right Leg'] = true,['Right Arm'] = true,['Left Arm'] = true} ;
+			Attachment = false ;
+			Timing = 3 ; 
+			Emit = 50 
+
+		})]] -- add effect module?
+		
+		task.spawn(function()
+			
+			local count = 0
+			
+			while task.wait(1) and count <= 3 do
+				
+				count+=1
+				
+				TargetPlayer.Character.Humanoid:TakeDamage(TempData.Damage/7)
+			
+			end
+			
+		end)
+		
+	end
+	
+	
+end
+
+return DarkHeart

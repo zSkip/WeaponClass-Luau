@@ -5,13 +5,18 @@ local WeaponClassMeta = {__index=WeaponClass} ;
 local BindClass = {} ;
 local BindClassMeta = {__index=BindClass} ;
 
-local WeaponMaker = {
-
-CreatedWeapons = {} ;
-	
-} ;
-
 local RunServ = game:GetService('RunService') ;
+
+local Indexer = require(game.ReplicatedStorage.IndexerV2) ;
+local IndexerPath = game.ReplicatedStorage.IndexerV2 ;
+
+type NewWeaponParam = {
+	
+	WeaponModel : Model ;
+	
+	WeaponIdentifer : string ;
+	
+}
 
 type DamageType = {
 	
@@ -21,7 +26,7 @@ type DamageType = {
 	
 }
 
-type KeybindClassData = {
+type AbilityBindClassData = {
 	
 	Input : Enum.KeyCode | Enum.UserInputType ;
 	
@@ -35,82 +40,177 @@ type KeybindClassData = {
 	
 }
 
-function WeaponMaker.NewWeapon(Name)
+type GeneralBindClassData = {
+	
+	Input : Enum.KeyCode | Enum.UserInputType ;
+	
+	AdditionalDictionary : {any} ; 
+	
+}
+
+type BindFunctionBasic = {
+	
+	Input : Enum.KeyCode | Enum.UserInputType ;
+	
+	Identifier : string ; 
+	
+	BoundFunctions : {} ;
+	
+}
+
+local WeaponMaker = {
+
+CreatedWeapons = {} ;
+	
+} ;
+--[[
+
+todo :
+
+add saftey/ on the backburner
+
+add animation based on state 
+
+]]
+function WeaponMaker.NewWeapon(NewWeaponParam:NewWeaponParam)
 
 	local self = setmetatable({
 		
-		Identifier = Name ;
+		Identifier = NewWeaponParam.WeaponIdentifer ;
+		
+		WeaponModel = NewWeaponParam.WeaponModel ;
 		
 		KeyBinds = {} ;
 		
 		MouseBinds = {} ;
+		
+		CreatedIndex = Indexer.New({Remote = IndexerPath.Weapons ; Identifier = NewWeaponParam.WeaponIdentifer}) ;
+		
+		IndexReference = Indexer ;
 	
 	},WeaponClassMeta) ;
 	
-	WeaponMaker.CreatedWeapons[Name] = self ;
-	
+	WeaponMaker.CreatedWeapons[NewWeaponParam.WeaponIdentifer] = self ;
+
 	return self ;
 	
 end ;
 
-function WeaponClass:CreateAbility(KeybindClassData:KeybindClassData)
+function WeaponClass:CreateAbility(BindClassData:AbilityBindClassData) -- general for abilites 
 	
-	if KeybindClassData.Input.EnumType == Enum.KeyCode then
+	if BindClassData.Input.EnumType == Enum.KeyCode then
 		
-		self.KeyBinds[KeybindClassData.Input.Name] = setmetatable({ 
+		self.KeyBinds[BindClassData.Input.Name] = setmetatable({ 
 
-			Input = KeybindClassData.Input ;
+			Input = BindClassData.Input ;
 
-			Damage = KeybindClassData.Damage ;
+			Damage = BindClassData.Damage ;
 
-			HitboxRange = KeybindClassData.HitboxRange ;
+			HitboxRange = BindClassData.HitboxRange ;
 
-			Animation = KeybindClassData.Animation ;
+			Animation = BindClassData.Animation ;
 			AnimationFrames = 0 ;
 
-			AttackSpeed = KeybindClassData.AttackSpeed ;
+			AttackSpeed = BindClassData.AttackSpeed ;
 	
 			CoolDown = os.time() ;
+			IsActive = false ;
 
-			Identifier = self.Identifier 
+			Identifier = self.Identifier ;
+			
+			BoundFunctions = {} ;
 
 		},BindClassMeta) ;
 		
-		return self.KeyBinds[KeybindClassData.Input.Name]
+		return self.KeyBinds[BindClassData.Input.Name]
 
-	elseif KeybindClassData.Input.EnumType == Enum.UserInputType then
+	elseif BindClassData.Input.EnumType == Enum.UserInputType then
 		
-		self.MouseBinds[KeybindClassData.Input.Name] = setmetatable({ 
+		self.MouseBinds[BindClassData.Input.Name] = setmetatable({ 
 
-			Input = KeybindClassData.Input ;
+			Input = BindClassData.Input ;
 
-			Damage = KeybindClassData.Damage ;
+			Damage = BindClassData.Damage ;
 
-			HitboxRange = KeybindClassData.HitboxRange ;
+			HitboxRange = BindClassData.HitboxRange ;
 
-			Animation = KeybindClassData.Animation ;
+			Animation = BindClassData.Animation ;
 			AnimationFrames = 0 ;
 
-			AttackSpeed = KeybindClassData.AttackSpeed ;
+			AttackSpeed = BindClassData.AttackSpeed ;
 			
 			CoolDown = os.time() ;
+			IsActive = false ; 
 
-			Identifier = self.Identifier 
+			Identifier = self.Identifier ;
+			
+			BoundFunctions = {} ;
 
 		},BindClassMeta) ;
 		
-		print(self,self.KeyBinds,self.KeyBinds[KeybindClassData.Input.Name])
-		
-		return self.MouseBinds[KeybindClassData.Input.Name]
+		return self.MouseBinds[BindClassData.Input.Name]
 		
 	end ;
 	
 end ;
 
-function BindClass:BindFunction()
+function WeaponClass:CreateGeneralBind(BindClassData:GeneralBindClassData) -- general for keybinds
 	
+	if BindClassData.Input.EnumType == Enum.KeyCode then
+
+		self.KeyBinds[BindClassData.Input.Name] = setmetatable({ 
+
+			Input = BindClassData.Input ;
+
+			Identifier = self.Identifier ;
+			
+			BoundFunctions = {} ;
+			
+			IsActive = false ;
+
+		},BindClassMeta) ;
+		
+		for Index,Value in BindClassData.AdditionalDictionary do
+
+			self.KeyBinds[BindClassData.Input.Name][Index] = Value
+
+		end
+
+		return self.KeyBinds[BindClassData.Input.Name]
+
+	elseif BindClassData.Input.EnumType == Enum.UserInputType then
+
+		self.MouseBinds[BindClassData.Input.Name] = setmetatable({ 
+
+			Input = BindClassData.Input ;
+
+			Identifier = self.Identifier  ;
+			
+			BoundFunctions = {} ; 
+			
+			IsActive = false ;
+
+		},BindClassMeta) ;
+		
+		for Index,Value in BindClassData.AdditionalDictionary do
+			
+			self.KeyBinds[BindClassData.Input.Name][Index] = Value
+			
+		end
+
+		return self.MouseBinds[BindClassData.Input.Name]
+
+	end ;
 
 	
+end
+
+function BindClass:BindFunction(PassedFunction)
+	
+	local self : BindFunctionBasic = self
+	
+	table.insert(self.BoundFunctions,PassedFunction)
+
 end ;
 
 return WeaponMaker ;
